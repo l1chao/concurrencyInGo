@@ -2,7 +2,9 @@ package main_test
 
 import (
 	"fmt"
+	"sync"
 	"testing"
+	"time"
 )
 
 func Test1(t *testing.T) {
@@ -71,15 +73,45 @@ func Test2(t *testing.T) {
 type Person struct{} // 结构体类型
 
 func Test3(t *testing.T) {
-	var s struct{}      // 结构体类型
-	var s1 = struct{}{} // 结构体实例
+	// var s struct{}      // 结构体类型
+	// var s1 = struct{}{} // 结构体实例
 
-	var f func(int) (int, error)       // 函数类型
-	var f = func(a int) (int, error) { // 函数实例
-		return 1, nil
-	}
+	// var f func(int) (int, error)       // 函数类型
+	// var f = func(a int) (int, error) { // 函数实例
+	// 	return 1, nil
+	// }
 }
 
-func foo1() {
+// 如果要等好几个事件结束了之后，当前主协程才能够结束，那就需要用waitgroup来实现
+func TestFoo1(t *testing.T) {
+	var wg sync.WaitGroup
+	wg.Add(5)
 
+	for i := range 5 {
+		go foo1_helper(&wg, i+1)
+	}
+	wg.Wait()
+	fmt.Println("main goroutine is over.")
+}
+
+func foo1_helper(wg *sync.WaitGroup, id int) {
+	defer wg.Done() // 如果要主协程等foo1_helper协程完毕了之后才能结束，那么helper的Done就应该是函数要结束的时候才调用。
+	fmt.Println("Welcome! No.", id)
+}
+
+func Test4(t *testing.T) {
+
+}
+
+// kubernetes控制器
+func waitForStopOrTimeout(stopCh <-chan struct{}, timeout time.Duration) <-chan struct{} {
+	stopChWithTimeout := make(chan struct{})
+	go func() {
+		select {
+		case <-stopCh: // 自然结束
+		case <-time.After(timeout): //最长等待时间
+		}
+		close(stopChWithTimeout)
+	}()
+	return stopChWithTimeout
 }
