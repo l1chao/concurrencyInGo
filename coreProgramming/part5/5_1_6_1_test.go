@@ -75,6 +75,21 @@ func fanIn1(ins ...<-chan int) <-chan int {
 	var wg sync.WaitGroup
 
 	collector := func(in <-chan int) {
-
+		defer wg.Done()
+		for value := range in {
+			out <- value
+		}
 	}
+
+	wg.Add(len(ins))
+	for _, in := range ins {
+		go collector(in)
+	}
+
+	go func() {
+		wg.Wait()
+		close(out)
+	}()
+
+	return out
 }
