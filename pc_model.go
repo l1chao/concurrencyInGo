@@ -31,7 +31,7 @@ func generateOrder(id int) Order {
 	}
 }
 
-func main() {
+func main1() {
 	rand.Seed(time.Now().UnixNano())
 
 	// 使用带缓冲的channel作为订单队列 (容量100)
@@ -76,7 +76,7 @@ func main() {
 		go func(consumerID int) {
 			defer wg.Done() // 一个consumer的range关闭了，就Done。所有consumer的range关闭了，就表示orderQueue真的没有了！
 
-			for order := range orderQ ueue { // orderQueue通道关闭后，for range​​不会立即终止​​：for range会​​继续读取通道中剩余的所有数据​​，直到通道被完全清空。
+			for order := range orderQueue { // orderQueue通道关闭后，for range​​不会立即终止​​：for range会​​继续读取通道中剩余的所有数据​​，直到通道被完全清空。
 				fmt.Printf("👷 消费者%d 开始处理订单 #%d (金额: $%.2f)\n",
 					consumerID, order.ID, order.Amount)
 
@@ -103,7 +103,7 @@ func main() {
 	defer ticker.Stop()
 
 	go func() {
-		for range ticker.C {
+		for range ticker.C { // 这种判定channel长度，但是不依靠判定结果读写的情况，并不会出现竞态。
 			fmt.Printf("📊 监控: 当前队列长度 %d/%d | 活跃消费者: %d\n",
 				len(orderQueue), cap(orderQueue), numConsumers)
 		}

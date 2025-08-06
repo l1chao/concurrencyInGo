@@ -2,18 +2,27 @@ package main
 
 import (
 	"fmt"
-	"strconv"
+	"sync"
+	"time"
 )
 
-func main1() {
-	fmt.Printf("%b\n", '€')
-	for _, v := range []byte("€") {
-		fmt.Printf("%b", v)
-	}
-	// fmt.Printf("%v\n", []byte("€"))
+func main() {
+	// 创建计数通道（带缓冲区的空结构体通道）
+	taskCount := 5
+	var wg sync.WaitGroup
 
-	str_base10 := "11"
-	bridge, _ := strconv.Atoi(str_base10)
-	str_base16 := strconv.FormatInt(int64(bridge), 16)
-	fmt.Println(str_base16)
+	for i := 0; i < taskCount; i++ {
+		wg.Add(1)
+		go worker(i, &wg)
+	}
+	wg.Wait()
+	fmt.Println("所有任务完成！")
+}
+
+func worker(id int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	fmt.Printf("Worker %d 开始工作\n", id)
+	time.Sleep(time.Duration(id+1) * time.Second) // 模拟不同时长的工作
+	fmt.Printf("Worker %d 工作结束\n", id)
 }
